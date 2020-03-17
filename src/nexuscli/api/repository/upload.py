@@ -61,3 +61,29 @@ def upload_file_yum(repository, src_file, dst_dir, dst_file):
         raise exception.NexusClientAPIError(
             f'Uploading to {repository_path}. Reason: {response.reason} '
             f'Status code: {response.status_code} Text: {response.text}')
+
+
+def upload_file_maven2(repository, src_file, dst_dir, dst_file):
+    """
+    Upload a single file to a maven2 repository.
+
+    :param repository: repository instance used to access Nexus 3 service.
+    :type repository: nexuscli.api.repository.model.Repository
+    :param src_file: path to the local file to be uploaded.
+    :param dst_dir: directory under dst_repo to place file in.
+    :param dst_file: destination file name.
+    :raises exception.NexusClientAPIError: unknown response from Nexus API.
+    """
+    dst_dir = dst_dir or REMOTE_PATH_SEPARATOR
+    repository_path = REMOTE_PATH_SEPARATOR.join(
+        ['repository', repository.name, dst_dir, dst_file])
+
+    with open(src_file, 'rb') as fh:
+        response = repository.nexus_client.http_put(
+            repository_path, data=fh, stream=True,
+            service_url=repository.nexus_client.config.url)
+
+    if response.status_code != 201:
+        raise exception.NexusClientAPIError(
+            f'Uploading to {repository_path}. Reason: {response.reason} '
+            f'Status code: {response.status_code} Text: {response.text}')
